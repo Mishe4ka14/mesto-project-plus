@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import Card from '../models/cards';
+import { ERROR_CODE_BAD_REQUEST, ERROR_CODE_INTERNAL_SERVER_ERROR, ERROR_CODE_NOT_FOUND } from '../utils/constants';
 
 export const getCards = (req: Request, res: Response) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch(() => res.status(500).send({ message: 'какая-то ошибка в получении карточек' }));
+    .catch(() => res.status(ERROR_CODE_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' }));
 };
 
 export const createCard = (req: Request, res: Response) => {
@@ -13,7 +14,13 @@ export const createCard = (req: Request, res: Response) => {
 
   Card.create({ name, link, owner: id })
     .then((card) => res.send(card))
-    .catch(() => res.status(400).send({ message: 'ошибка создания карточки' }));
+    .catch((err) => {
+      if (err.name === 'InternalServerError') {
+        res.status(ERROR_CODE_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      } else {
+        res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки' });
+      }
+    });
 };
 
 export const deleteCard = (req: Request, res: Response) => {
@@ -21,7 +28,13 @@ export const deleteCard = (req: Request, res: Response) => {
 
   Card.findByIdAndRemove(id)
     .then(() => res.send({ message: 'удаление произошло успешно' }))
-    .catch(() => res.status(500).send({ message: 'ошибка при удалении' }));
+    .catch((err) => {
+      if (err.name === 'InternalServerError') {
+        res.status(ERROR_CODE_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      } else {
+        res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена.' });
+      }
+    });
 };
 
 export const likeCard = (req: Request, res: Response) => {
@@ -33,7 +46,15 @@ export const likeCard = (req: Request, res: Response) => {
     { new: true },
   )
     .then(() => res.send({ message: 'лайкусик поставлен' }))
-    .catch(() => res.status(500).send({ message: 'что-то пошло не так' }));
+    .catch((err) => {
+      if (err.name === 'InternalServerError') {
+        res.status(ERROR_CODE_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      } else if (err.name === 'ValidationError') {
+        res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки лайка.' });
+      } else {
+        res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Передан несуществующий _id карточки.' });
+      }
+    });
 };
 
 export const dislikeCard = (req: Request, res: Response) => {
@@ -45,5 +66,13 @@ export const dislikeCard = (req: Request, res: Response) => {
     { new: true },
   )
     .then(() => res.send({ message: 'лайкусик удален' }))
-    .catch(() => res.status(500).send({ message: 'что-то пошло не так' }));
+    .catch((err) => {
+      if (err.name === 'InternalServerError') {
+        res.status(ERROR_CODE_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' });
+      } else if (err.name === 'ValidationError') {
+        res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные для снятия лайка.' });
+      } else {
+        res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Передан несуществующий _id карточки.' });
+      }
+    });
 };
