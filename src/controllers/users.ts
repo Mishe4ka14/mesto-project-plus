@@ -14,3 +14,10 @@ export const getUserById = (req: Request, res: Response) => {
     .then((user) => res.send({ data: user }))
     .catch(() => res.status(500).send({ message: 'какая-то ошибка поиска по ID' }));
 };
+
+export const createUser = (req: Request, res: Response) => {
+  const { name, avatar, about } = req.body;
+  User.create({ name, avatar, about })
+    .then((user) => res.send(user))
+    .catch(() => res.status(401).send({ message: 'ужасная ошибка' }));
+};
