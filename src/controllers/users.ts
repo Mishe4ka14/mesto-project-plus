@@ -21,3 +21,21 @@ export const createUser = (req: Request, res: Response) => {
     .then((user) => res.send(user))
     .catch(() => res.status(401).send({ message: 'ужасная ошибка' }));
 };
+
+export const changeUserInfo = (req: Request, res: Response) => {
+  const { name, about } = req.body;
+  const id = req.user?.id;
+
+  User.findByIdAndUpdate(id, { name, about })
+    .then((user) => res.send({ data: user }))
+    .catch(() => res.status(500).send({ message: 'ошибочка изменения' }));
+};
+
+export const changeUserAvatar = (req: Request, res: Response) => {
+  const { avatar } = req.body;
+  const id = req.user?.id;
+
+  User.findByIdAndUpdate(id, { avatar })
+    .then((user) => res.send({ data: user }))
+    .catch(() => res.status(500).send({ message: 'ошибочка изменения' }));
+};
