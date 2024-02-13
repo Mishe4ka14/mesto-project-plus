@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcrypt';
 import User from '../models/users';
 import {
   ERROR_CODE_INTERNAL_SERVER_ERROR, ERROR_CODE_NOT_FOUND, CREATED_CODE,
@@ -18,8 +19,17 @@ export const getUserById = (req: Request, res: Response, next: NextFunction) => 
 };
 
 export const createUser = (req: Request, res: Response, next: NextFunction) => {
-  const { name, avatar, about } = req.body;
-  User.create({ name, avatar, about })
+  const {
+    name, avatar, about, password, email,
+  } = req.body;
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      email,
+      password: hash,
+      name,
+      avatar,
+      about,
+    }))
     .then((user) => res.status(CREATED_CODE).send(user))
     .catch((err) => next(err));
 };
