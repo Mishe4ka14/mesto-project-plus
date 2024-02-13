@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
+import cookieParser from 'cookie-parser';
 import userRouter from './routes/users';
 import cardRouter from './routes/cards';
 import { ERROR_CODE_NOT_FOUND } from './utils/constants';
@@ -22,6 +23,7 @@ app.use((req: IUserRequest, res: Response, next: NextFunction) => {
   next();
 });
 app.use(express.json());
+app.use(cookieParser());
 app.use(helmet());
 app.get('/', (req, res) => {
   res.send('HELLO! Это рабочий сервер Express.');

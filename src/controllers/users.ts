@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import User from '../models/users';
 import {
   ERROR_CODE_INTERNAL_SERVER_ERROR, ERROR_CODE_NOT_FOUND, CREATED_CODE,
@@ -62,4 +63,24 @@ export const changeUserAvatar = (req: IUserRequest, res: Response, next: NextFun
       }
     })
     .catch((err) => next(err));
+};
+
+export const login = (req: IUserRequest, res: Response, next: NextFunction) => {
+  const { email, password } = req.body;
+  User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user?._id },
+        'some secret key',
+        { expiresIn: '7d' },
+      );
+      res.cookie('jwt', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
+      res.send({ token });
+    })
+    .catch((err) => {
+      res
+        .status(401)
+        .send({ message: err.message });
+      next();
+    });
 };
