@@ -41,6 +41,7 @@ const userSchema = new mongoose.Schema<IUser>(
     password: {
       type: String,
       required: [true, 'Поле "password" должно быть заполнено'],
+      select: false,
     },
   },
   { versionKey: false },
@@ -48,7 +49,7 @@ const userSchema = new mongoose.Schema<IUser>(
 
 // добавляем модели метод проверки почты
 userSchema.static('findUserByCredentials', function findUserByCredentials(email: string, password: string) {
-  return this.findOne({ email })
+  return this.findOne({ email }).select('+password')
     .then((user: IUser) => {
       if (!user) {
         return Promise.reject(new Error('Неправильные почта или пароль'));

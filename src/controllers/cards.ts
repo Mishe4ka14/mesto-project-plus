@@ -20,11 +20,17 @@ export const createCard = (req: IUserRequest, res: Response, next: NextFunction)
     .catch((err) => next(err));
 };
 
-export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
+export const deleteCard = (req: IUserRequest, res: Response, next: NextFunction) => {
   const { id } = req.params;
+  const owner = req.user?._id;
 
-  Card.findByIdAndRemove(id)
-    .then(() => res.send({ message: 'удаление произошло успешно' }))
+  Card.findById(id)
+    .then((card) => {
+      if (card?.owner === owner) {
+        Card.deleteOne(card?._id)
+          .then(() => res.send({ message: 'удаление произошло успешно' }));
+      } throw new Error('Вы можете удалять только свои карточки');
+    })
     .catch((err) => next(err));
 };
 

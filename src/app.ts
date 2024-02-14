@@ -27,8 +27,8 @@ app.post('/signup', createUser);
 
 app.use(auth);
 
-app.use('/users', userRouter);
 app.use('/cards', cardRouter);
+app.use('/users', userRouter);
 
 app.use('*', (req: Request, res: Response) => {
   res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Запрашиваемый ресурс не найден' });
