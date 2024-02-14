@@ -13,10 +13,18 @@ export const getUsers = (req: Request, res: Response) => {
     .catch(() => res.status(ERROR_CODE_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' }));
 };
 
-export const getUserById = (req: Request, res: Response, next: NextFunction) => {
-  User.findById(req.params.userId)
+export const getUserById = (res: Response, next: NextFunction, id: string) => {
+  User.findById(id)
     .then((us) => res.send({ data: us }))
     .catch((err) => next(err));
+};
+
+export const getUser = (req: Request, res: Response, next: NextFunction) => {
+  getUserById(res, next, req.params.id);
+};
+
+export const getAuthorizedUser = (req: IUserRequest, res: Response, next: NextFunction) => {
+  getUserById(res, next, req.user?._id);
 };
 
 export const createUser = (req: Request, res: Response, next: NextFunction) => {
