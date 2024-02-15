@@ -1,22 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import ConflictError from '../errors/conflict-error';
+import NotFoundError from '../errors/not-found-error';
 import User from '../models/users';
-import {
-  ERROR_CODE_INTERNAL_SERVER_ERROR, ERROR_CODE_NOT_FOUND, CREATED_CODE,
-} from '../utils/constants';
+import { CREATED_CODE } from '../utils/constants';
 import { IUserRequest } from '../types';
 
-export const getUsers = (req: Request, res: Response) => {
+export const getUsers = (req: Request, res: Response, next: NextFunction) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(ERROR_CODE_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 };
 
 export const getUserById = (res: Response, next: NextFunction, id: string) => {
   User.findById(id)
-    .then((us) => res.send({ data: us }))
-    .catch((err) => next(err));
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователя с таким ID не найден');
+      }
+      res.send({ data: user });
+    })
+    .catch(next);
 };
 
 export const getUser = (req: Request, res: Response, next: NextFunction) => {
@@ -27,22 +32,28 @@ export const getAuthorizedUser = (req: IUserRequest, res: Response, next: NextFu
   getUserById(res, next, req.user?._id);
 };
 
-export const createUser = (req: Request, res: Response, next: NextFunction) => {
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const {
     name, avatar, about, password, email,
   } = req.body;
-  bcrypt.hash(password, 10)
-    .then((hash) => User.create({
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new ConflictError('Пользователь с таким email уже существует');
+    }
+    const hash = await bcrypt.hash(password, 10);
+    const user = await User.create({
       email,
       password: hash,
       name,
       avatar,
       about,
-    }))
-    .then((user) => res.status(CREATED_CODE).send(user))
-    .catch((err) => next(err));
+    });
+    res.status(CREATED_CODE).send(user);
+  } catch (err) {
+    next(err);
+  }
 };
-
 export const changeUserInfo = (req: IUserRequest, res: Response, next: NextFunction) => {
   const { name, about } = req.body;
   const id = req.user?._id;
@@ -51,11 +62,9 @@ export const changeUserInfo = (req: IUserRequest, res: Response, next: NextFunct
     .then((user) => {
       if (user) {
         res.send({ data: user });
-      } else {
-        res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден' });
-      }
+      } throw new NotFoundError('Пользователь с таким id не найден');
     })
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 export const changeUserAvatar = (req: IUserRequest, res: Response, next: NextFunction) => {
@@ -66,11 +75,9 @@ export const changeUserAvatar = (req: IUserRequest, res: Response, next: NextFun
     .then((user) => {
       if (user) {
         res.send({ data: user });
-      } else {
-        res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден' });
-      }
+      } throw new NotFoundError('Пользователь с таким id не найден');
     })
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 export const login = (req: IUserRequest, res: Response, next: NextFunction) => {
@@ -85,10 +92,5 @@ export const login = (req: IUserRequest, res: Response, next: NextFunction) => {
       res.cookie('jwt', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 });
       res.send({ token });
     })
-    .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
-      next();
-    });
+    .catch(next);
 };

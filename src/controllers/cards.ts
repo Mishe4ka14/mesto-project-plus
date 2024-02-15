@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
+import NotFoundError from '../errors/not-found-error';
 import Card from '../models/cards';
-import {
-  ERROR_CODE_INTERNAL_SERVER_ERROR, ERROR_CODE_NOT_FOUND, CREATED_CODE,
-} from '../utils/constants';
+import { CREATED_CODE } from '../utils/constants';
 import { IUserRequest } from '../types';
+import ConflictError from '../errors/conflict-error';
 
-export const getCards = (req: Request, res: Response) => {
+export const getCards = (req: Request, res: Response, next: NextFunction) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch(() => res.status(ERROR_CODE_INTERNAL_SERVER_ERROR).send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 };
 
 export const createCard = (req: IUserRequest, res: Response, next: NextFunction) => {
@@ -17,7 +17,7 @@ export const createCard = (req: IUserRequest, res: Response, next: NextFunction)
 
   Card.create({ name, link, owner: id })
     .then((card) => res.status(CREATED_CODE).send(card))
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 export const deleteCard = (req: IUserRequest, res: Response, next: NextFunction) => {
@@ -29,9 +29,9 @@ export const deleteCard = (req: IUserRequest, res: Response, next: NextFunction)
       if (card?.owner === owner) {
         Card.deleteOne(card?._id)
           .then(() => res.send({ message: 'удаление произошло успешно' }));
-      } throw new Error('Вы можете удалять только свои карточки');
+      } throw new ConflictError('Вы можете удалять только свои карточки');
     })
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 export const likeCard = (req: IUserRequest, res: Response, next: NextFunction) => {
@@ -44,10 +44,10 @@ export const likeCard = (req: IUserRequest, res: Response, next: NextFunction) =
   )
     .then((card) => {
       if (!card) {
-        res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Передан несуществующий _id карточки.' });
-      } else res.send({ message: 'лайкусик поставлен' });
+        throw new NotFoundError('Передан несуществующий _id карточки');
+      } res.send({ message: 'лайкусик поставлен' });
     })
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 export const dislikeCard = (req: IUserRequest, res: Response, next: NextFunction) => {
@@ -60,8 +60,8 @@ export const dislikeCard = (req: IUserRequest, res: Response, next: NextFunction
   )
     .then((card) => {
       if (!card) {
-        res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Передан несуществующий _id карточки.' });
-      } else res.send({ message: 'лайкусик поставлен' });
+        throw new NotFoundError('Передан несуществующий _id карточки');
+      } res.send({ message: 'лайкусик поставлен' });
     })
-    .catch((err) => next(err));
+    .catch(next);
 };

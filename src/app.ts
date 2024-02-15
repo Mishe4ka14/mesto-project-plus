@@ -4,7 +4,6 @@ import cookieParser from 'cookie-parser';
 import userRouter from './routes/users';
 import cardRouter from './routes/cards';
 import { ERROR_CODE_NOT_FOUND } from './utils/constants';
-import handleErrors from './middlewares/error-middleware';
 import { login, createUser } from './controllers/users';
 import auth from './middlewares/auth';
 import { errorLogger, requestLogger } from './middlewares/logger';
@@ -38,9 +37,12 @@ app.use('*', (req: Request, res: Response) => {
 });
 
 app.use(errorLogger);
-// обработчик ошибок для всех контроллеров
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  handleErrors(err, req, res, next);
+  const { statusCode = 500, message } = err;
+  res
+    .status(statusCode)
+    .send({ message: statusCode === 500 ? 'На сервере произошла ошибка' : message });
+  next();
 });
 
 app.listen(PORT, () => {
