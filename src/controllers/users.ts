@@ -54,11 +54,9 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
     next(err);
   }
 };
-export const changeUserInfo = (req: IUserRequest, res: Response, next: NextFunction) => {
-  const { name, about } = req.body;
-  const id = req.user?._id;
 
-  User.findByIdAndUpdate(id, { name, about }, { new: true, runValidators: true })
+const findUserAndUpdate = (id: string, obj: object, res: Response, next: NextFunction) => {
+  User.findByIdAndUpdate(id, obj, { new: true, runValidators: true })
     .then((user) => {
       if (user) {
         res.send({ data: user });
@@ -67,17 +65,18 @@ export const changeUserInfo = (req: IUserRequest, res: Response, next: NextFunct
     .catch(next);
 };
 
+export const changeUserInfo = (req: IUserRequest, res: Response, next: NextFunction) => {
+  const { name, about } = req.body;
+  const id = req.user?._id;
+
+  findUserAndUpdate(id, { name, about }, res, next);
+};
+
 export const changeUserAvatar = (req: IUserRequest, res: Response, next: NextFunction) => {
   const { avatar } = req.body;
   const id = req.user?._id;
 
-  User.findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
-    .then((user) => {
-      if (user) {
-        res.send({ data: user });
-      } throw new NotFoundError('Пользователь с таким id не найден');
-    })
-    .catch(next);
+  findUserAndUpdate(id, { avatar }, res, next);
 };
 
 export const login = (req: IUserRequest, res: Response, next: NextFunction) => {
