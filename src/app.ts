@@ -7,6 +7,7 @@ import { ERROR_CODE_NOT_FOUND } from './utils/constants';
 import { login, createUser } from './controllers/users';
 import auth from './middlewares/auth';
 import { errorLogger, requestLogger } from './middlewares/logger';
+import { createUserValidator, loginValidator } from './validation/user-validators';
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
@@ -14,6 +15,7 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 const helmet = require('helmet');
+const { errors } = require('celebrate');
 
 app.use(express.json());
 app.use(cookieParser());
@@ -24,8 +26,8 @@ app.get('/', (req, res) => {
   res.send('HELLO! Это рабочий сервер Express.');
 });
 
-app.post('/signin', login);
-app.post('/signup', createUser);
+app.post('/signin', loginValidator, login);
+app.post('/signup', createUserValidator, createUser);
 
 app.use(auth);
 
@@ -37,6 +39,7 @@ app.use('*', (req: Request, res: Response) => {
 });
 
 app.use(errorLogger);
+app.use(errors());
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const { statusCode = 500, message } = err;
   res

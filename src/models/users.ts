@@ -29,6 +29,12 @@ const userSchema = new mongoose.Schema<IUser>(
     avatar: {
       type: String,
       default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+      validate: {
+        validator(v: string) {
+          return /^(https?:\/\/)?(www\.)?[\w-]+(\.[\w-]+)+[/#?]?.*$/.test(v);
+        },
+        message: 'Некорректная ссылка на аватар',
+      },
     },
     email: {
       type: String,
@@ -46,6 +52,7 @@ const userSchema = new mongoose.Schema<IUser>(
     },
   },
   { versionKey: false },
+
 );
 
 // добавляем модели метод проверки почты
