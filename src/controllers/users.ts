@@ -32,27 +32,26 @@ export const getAuthorizedUser = (req: IUserRequest, res: Response, next: NextFu
   getUserById(res, next, req.user?._id);
 };
 
-export const createUser = async (req: Request, res: Response, next: NextFunction) => {
+export const createUser = (req: Request, res: Response, next: NextFunction) => {
   const {
     name, avatar, about, password, email,
   } = req.body;
-  try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw new ConflictError('Пользователь с таким email уже существует');
-    }
-    const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
       email,
       password: hash,
       name,
       avatar,
       about,
+    }))
+    .then((user) => res.status(CREATED_CODE).send(user))
+    .catch((err) => {
+      if (err.code === 11000) {
+        next((new ConflictError('Пользователь с таким email уже существует')));
+      } else {
+        next(err);
+      }
     });
-    res.status(CREATED_CODE).send(user);
-  } catch (err) {
-    next(err);
-  }
 };
 
 const findUserAndUpdate = (id: string, obj: object, res: Response, next: NextFunction) => {
