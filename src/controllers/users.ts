@@ -44,7 +44,12 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
       avatar,
       about,
     }))
-    .then((user) => res.status(CREATED_CODE).send(user))
+    .then((user) => res.status(CREATED_CODE).send({
+      email: user.email,
+      name: user.name,
+      avatar: user.avatar,
+      about: user.about,
+    }))
     .catch((err) => {
       if (err.code === 11000) {
         next((new ConflictError('Пользователь с таким email уже существует')));

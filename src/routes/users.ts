@@ -7,8 +7,8 @@ import { getUserByIDValidator, changeUserAvatarValidator, changeUserInfoValidato
 const router = Router();
 
 router.get('/', getUsers);
+router.get('/me', getAuthorizedUser);
 router.get('/:userId', getUserByIDValidator, getUser);
-router.get('/me', getUserByIDValidator, getAuthorizedUser);
 router.patch('/me', changeUserInfoValidator, changeUserInfo);
 router.patch('/me/avatar', changeUserAvatarValidator, changeUserAvatar);
 export default router;

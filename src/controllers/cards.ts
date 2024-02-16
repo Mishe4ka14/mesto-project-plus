@@ -26,10 +26,18 @@ export const deleteCard = (req: IUserRequest, res: Response, next: NextFunction)
 
   Card.findById(id)
     .then((card) => {
-      if (card?.owner === owner) {
-        Card.deleteOne(card?._id)
-          .then(() => res.send({ message: 'удаление произошло успешно' }));
-      } throw new ConflictError('Вы можете удалять только свои карточки');
+      if (!card) {
+        throw new NotFoundError('Карточка не найдена');
+      }
+
+      if (card.owner.toString() === owner) {
+        Card.deleteOne(card._id);
+      } else {
+        throw new ConflictError('Вы можете удалять только свои карточки');
+      }
+    })
+    .then(() => {
+      res.send({ message: 'удаление произошло успешно' });
     })
     .catch(next);
 };

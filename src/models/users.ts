@@ -16,7 +16,7 @@ interface UserModel extends Model<IUser> {
 }
 const validator = require('validator');
 
-const userSchema = new mongoose.Schema<IUser>(
+export const userSchema = new mongoose.Schema<IUser>(
   {
     name: {
       type: String,

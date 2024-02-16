@@ -9,6 +9,12 @@ export const createCardValidator = celebrate({
 
 export const deleteCardValidator = celebrate({
   params: Joi.object().keys({
-    userId: Joi.string().required().alphanum(),
+    id: Joi.string().required().alphanum(),
+  }),
+});
+
+export const likeCardValidation = celebrate({
+  params: Joi.object().keys({
+    cardId: Joi.string().required().alphanum(),
   }),
 });
