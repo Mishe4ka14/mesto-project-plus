@@ -3,7 +3,7 @@ import NotFoundError from '../errors/not-found-error';
 import Card from '../models/cards';
 import { CREATED_CODE } from '../utils/constants';
 import { IUserRequest } from '../types';
-import ConflictError from '../errors/conflict-error';
+import ForbiddenError from '../errors/error-forbidden';
 
 export const getCards = (req: Request, res: Response, next: NextFunction) => {
   Card.find({})
@@ -33,7 +33,7 @@ export const deleteCard = (req: IUserRequest, res: Response, next: NextFunction)
       if (card.owner.toString() === owner) {
         Card.deleteOne(card._id);
       } else {
-        throw new ConflictError('Вы можете удалять только свои карточки');
+        throw new ForbiddenError('Вы можете удалять только свои карточки');
       }
     })
     .then(() => {

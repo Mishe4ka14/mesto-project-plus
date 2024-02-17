@@ -4,3 +4,4 @@ export const ERROR_CODE_BAD_REQUEST = 400;
 export const CREATED_CODE = 201;
 export const ERROR_CODE_UNAUTHORIZED = 401;
 export const CONFLICT_ERROR = 409;
+export const ERROR_FORBIDDEN = 403;
